@@ -1,15 +1,30 @@
 import React from "react";
-import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, View, Text, StyleSheet, Alert } from "react-native";
 
-const Chip = ({ selected = false, text, onPress }) => (
-    <TouchableOpacity onPress={onPress}>
-        <View style={selected ? styles.chipSelected : styles.chip}>
-            <Text style={selected ? styles.chip_textSelected : styles.chip_text}>
-                {text}
-            </Text>
-        </View>
-    </TouchableOpacity>
-)
+const Chip = ({ selected = false, text, onPress, onDeleteConfirm }) => {
+    const onLongPress = () => {
+        Alert.alert(`Delete ${text}?`, '', [
+            {
+                text: "Cancel",
+                style: "cancel"
+            },
+            {
+                text: "Yes",
+                onPress: onDeleteConfirm,
+            }
+        ]);
+    }
+
+    return (
+        <TouchableOpacity onPress={onPress} onLongPress={onLongPress}>
+            <View style={selected ? styles.chipSelected : styles.chip}>
+                <Text style={selected ? styles.chip_textSelected : styles.chip_text}>
+                    {text}
+                </Text>
+            </View>
+        </TouchableOpacity>
+    );
+}
 
 const styles = StyleSheet.create({
     chip: {

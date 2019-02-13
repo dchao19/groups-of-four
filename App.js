@@ -75,6 +75,11 @@ export default class App extends React.Component {
     this.setState({ [category]: newItems });
   }
 
+  deleteChip(category, index) {
+    const newItems = this.state[category].filter((_, i) => i !== index);
+    this.setState({ [category]: newItems });
+  }
+
   render() {
     return (
       <View style={styles.container}>
@@ -86,6 +91,7 @@ export default class App extends React.Component {
               <Chip
                 key={`member-${i}`}
                 onPress={() => this.toggleChip("members", i)}
+                onDeleteConfirm={() => this.deleteChip("members", i)}
                 text={member.value}
                 selected={member.selected} />
             )
@@ -98,6 +104,7 @@ export default class App extends React.Component {
               <Chip
                 key={`destination-${i}`}
                 onPress={() => this.toggleChip("destinations", i)}
+                onDeleteConfirm={() => this.deleteChip("destinations", i)}
                 text={destination.value}
                 selected={destination.selected} />
             )
@@ -110,6 +117,7 @@ export default class App extends React.Component {
               <Chip
                 key={`recipient-${i}`}
                 onPress={() => this.toggleChip("recipients", i)}
+                onDeleteConfirm={() => this.deleteChip("recipients", i)}
                 text={recipient.value}
                 selected={recipient.selected} />
             )
