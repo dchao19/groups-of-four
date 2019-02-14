@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import _ from "lodash";
 
 import Chip from './components/Chip.js';
+import DeletableChip from './components/DeleteableChip.js';
 
 export default class App extends React.Component {
   constructor(props) {
@@ -88,8 +89,8 @@ export default class App extends React.Component {
         <View style={styles.chipsContainer}>
           {this.state.members.map((member, i) => {
             return (
-              <Chip
-                key={`member-${i}`}
+              <DeletableChip
+                key={`member-${member.value}`}
                 onPress={() => this.toggleChip("members", i)}
                 onDeleteConfirm={() => this.deleteChip("members", i)}
                 text={member.value}
@@ -101,8 +102,8 @@ export default class App extends React.Component {
         <View style={styles.chipsContainer}>
           {this.state.destinations.map((destination, i) => {
             return (
-              <Chip
-                key={`destination-${i}`}
+              <DeletableChip
+                key={`destination-${destination.value}`}
                 onPress={() => this.toggleChip("destinations", i)}
                 onDeleteConfirm={() => this.deleteChip("destinations", i)}
                 text={destination.value}
@@ -114,8 +115,8 @@ export default class App extends React.Component {
         <View style={styles.chipsContainer}>
           {this.state.recipients.map((recipient, i) => {
             return (
-              <Chip
-                key={`recipient-${i}`}
+              <DeletableChip
+                key={`recipient-${recipient.value}`}
                 onPress={() => this.toggleChip("recipients", i)}
                 onDeleteConfirm={() => this.deleteChip("recipients", i)}
                 text={recipient.value}
