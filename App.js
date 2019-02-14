@@ -4,6 +4,7 @@ import _ from "lodash";
 
 import Chip from './components/Chip.js';
 import DeletableChip from './components/DeleteableChip.js';
+import AddButton from './components/AddButton.js';
 
 export default class App extends React.Component {
   constructor(props) {
@@ -81,6 +82,14 @@ export default class App extends React.Component {
     this.setState({ [category]: newItems });
   }
 
+  addChip(category, value) {
+    const newItems = _.cloneDeep(this.state[category]);
+
+    newItems.push({ value, selected: false });
+
+    this.setState({ [category]: newItems })
+  }
+
   render() {
     return (
       <View style={styles.container}>
@@ -97,6 +106,7 @@ export default class App extends React.Component {
                 selected={member.selected} />
             )
           })}
+          <AddButton onAddPress={(newValue) => this.addChip("members", newValue)} />
         </View>
         <Text style={styles.step}>Destination</Text>
         <View style={styles.chipsContainer}>
@@ -110,6 +120,8 @@ export default class App extends React.Component {
                 selected={destination.selected} />
             )
           })}
+          <AddButton onAddPress={(newValue) => this.addChip("destinations", newValue)} />
+
         </View>
         <Text style={styles.step}>Recipient</Text>
         <View style={styles.chipsContainer}>
@@ -123,6 +135,8 @@ export default class App extends React.Component {
                 selected={recipient.selected} />
             )
           })}
+          <AddButton onAddPress={(newValue) => this.addChip("recipients", newValue)} />
+
         </View>
         <TouchableOpacity>
           <View style={styles.sendButton}>
