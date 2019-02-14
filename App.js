@@ -2,9 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import _ from "lodash";
 
-import Chip from './components/Chip.js';
 import DeletableChip from './components/DeleteableChip.js';
-import AddButton from './components/AddButton.js';
+import AddableChip from './components/AddableChip.js';
 
 export default class App extends React.Component {
   constructor(props) {
@@ -106,7 +105,7 @@ export default class App extends React.Component {
                 selected={member.selected} />
             )
           })}
-          <AddButton onAddPress={(newValue) => this.addChip("members", newValue)} />
+          <AddableChip onAddPress={(newValue) => this.addChip("members", newValue)} />
         </View>
         <Text style={styles.step}>Destination</Text>
         <View style={styles.chipsContainer}>
@@ -120,7 +119,7 @@ export default class App extends React.Component {
                 selected={destination.selected} />
             )
           })}
-          <AddButton onAddPress={(newValue) => this.addChip("destinations", newValue)} />
+          <AddableChip onAddPress={(newValue) => this.addChip("destinations", newValue)} />
 
         </View>
         <Text style={styles.step}>Recipient</Text>
@@ -135,7 +134,7 @@ export default class App extends React.Component {
                 selected={recipient.selected} />
             )
           })}
-          <AddButton onAddPress={(newValue) => this.addChip("recipients", newValue)} />
+          <AddableChip onAddPress={(newValue) => this.addChip("recipients", newValue)} />
 
         </View>
         <TouchableOpacity>

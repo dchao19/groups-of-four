@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, TextInput, Stylesheet } from 'react-native';
 
-export default class AddButton extends React.Component {
+import PlusButton from "./PlusButton";
+
+export default class AddableChip extends React.Component {
     constructor(props) {
         super(props);
 
@@ -14,7 +16,6 @@ export default class AddButton extends React.Component {
     }
 
     onAddPress() {
-        console.log("here");
         this.props.onAddPress(this.state.currentValue);
 
         this.setState({ isEditing: false, currentValue: "" });
@@ -22,19 +23,7 @@ export default class AddButton extends React.Component {
 
     renderButton() {
         return (
-            <TouchableOpacity
-                onPress={() => this.setState({ isEditing: true })}
-                style={{
-                    borderRadius: 17.5,
-                    width: 35,
-                    height: 35,
-                    borderWidth: "0.5",
-                    borderColor: "#0275d8",
-                    alignItems: "center",
-                    justifyContent: "center"
-                }}>
-                <Text style={{ fontSize: 20, color: "#0275d8" }}>+</Text>
-            </TouchableOpacity>
+            <PlusButton onPress={() => this.setState({ isEditing: true })} />
         );
     }
 
