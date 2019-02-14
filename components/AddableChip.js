@@ -42,7 +42,7 @@ export default class AddableChip extends React.Component {
                         marginRight: 8
                     }}
                 />
-                <TouchableOpacity onPress={this.onAddPress}>
+                <TouchableOpacity disabled={this.state.StylesheetcurrentValue.length < 1} onPress={this.onAddPress}>
                     <View
                         style={{
                             backgroundColor: "#0275d8",
