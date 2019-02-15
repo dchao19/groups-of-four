@@ -6,6 +6,7 @@ import {
 	TouchableOpacity,
 	SafeAreaView
 } from "react-native";
+import { sendSMSAsync, isAvailableAsync } from "expo-sms";
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 import _ from "lodash";
 
@@ -14,65 +15,34 @@ import AddableChip from "./components/AddableChip.js";
 import ContactsModal from "./components/ContactsModal/ContactsModal";
 import PlusButton from "./components/PlusButton.js";
 
+import { commitState, retrieveState } from "./utils/storage";
+
 export default class App extends React.Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			members: [
-				{
-					value: "Daniel",
-					selected: true
-				},
-				{
-					value: "Gavin",
-					selected: false
-				},
-				{
-					value: "Danielle",
-					selected: false
-				}
-			],
-			destinations: [
-				{
-					value: "food",
-					selected: true
-				},
-				{
-					value: "dinner",
-					selected: false
-				},
-				{
-					value: "McDonald's",
-					selected: false
-				},
-				{
-					value: "crepes",
-					selected: false
-				}
-			],
-			recipients: [
-				{
-					value: { name: "Ian" },
-					selected: true
-				},
-				{
-					value: { name: "Mike" },
-					selected: false
-				},
-				{
-					value: { name: "Jen" },
-					selected: false
-				}
-			],
-			contactsModalVisible: false
+			members: [],
+			destinations: [],
+			recipients: [],
+			contactsModalVisible: false,
+			loading: false
 		};
 
 		this.toggleChip = this.toggleChip.bind(this);
 		this.contactAdd = this.contactAdd.bind(this);
+		this.sendButtonClick = this.sendButtonClick.bind(this);
 	}
 
-	toggleChip(category, index) {
+	async componentDidMount() {
+		this.setState({ loading: true });
+
+		const { members, destinations, recipients } = await retrieveState();
+
+		this.setState({ loading: false, members, destinations, recipients });
+	}
+
+	async toggleChip(category, index) {
 		const newItems = _.cloneDeep(this.state[category]);
 
 		newItems[index] = {
@@ -81,26 +51,56 @@ export default class App extends React.Component {
 		};
 
 		this.setState({ [category]: newItems });
+
+		await commitState({ ...this.state, [category]: newItems });
 	}
 
-	deleteChip(category, index) {
+	async deleteChip(category, index) {
 		const newItems = this.state[category].filter((_, i) => i !== index);
 		this.setState({ [category]: newItems });
+
+		await commitState({ ...this.state, [category]: newItems });
 	}
 
-	addChip(category, value) {
-		console.log(JSON.stringify(value));
-
+	async addChip(category, value) {
 		const newItems = _.cloneDeep(this.state[category]);
 
 		newItems.push({ value, selected: false });
 
 		this.setState({ [category]: newItems });
+		await commitState({ ...this.state, [category]: newItems });
 	}
 
 	contactAdd(contact) {
 		this.addChip("recipients", contact);
 		this.setState({ contactsModalVisible: false });
+	}
+
+	async sendButtonClick() {
+		const members = this.state.members
+			.filter(member => member.selected)
+			.map(member => member.value);
+		const destinations = this.state.destinations
+			.filter(destination => destination.selected)
+			.map(member => member.value);
+
+		const recipients = this.state.recipients
+			.filter(recipient => recipient.selected)
+			.map(recipient => recipient.value.number);
+
+		const allMembers = members.join(", ");
+		const destination = destinations[0];
+
+		const message = `${allMembers} ${
+			members.length > 1 ? "are" : "is"
+		} going to ${destination}`;
+
+		const isAvailable = await isAvailableAsync();
+		if (isAvailable) {
+			await sendSMSAsync(recipients, message);
+		} else {
+			alert("SMS is not available on this platform!");
+		}
 	}
 
 	render() {
@@ -164,7 +164,7 @@ export default class App extends React.Component {
 							onPress={() => this.setState({ contactsModalVisible: true })}
 						/>
 					</View>
-					<TouchableOpacity>
+					<TouchableOpacity onPress={this.sendButtonClick}>
 						<View style={styles.sendButton}>
 							<Text style={styles.sendButton_text}>Send.</Text>
 						</View>
