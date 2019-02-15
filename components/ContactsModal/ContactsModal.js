@@ -17,7 +17,7 @@ export default class ContactsModal extends React.Component {
 	}
 
 	async onShow() {
-		await Permissions.getAsync(Permissions.CONTACTS);
+		await Permissions.askAsync(Permissions.CONTACTS);
 
 		const { data } = await Contacts.getContactsAsync({
 			fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Name]
