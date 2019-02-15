@@ -6,6 +6,7 @@ import {
 	TouchableOpacity,
 	SafeAreaView
 } from "react-native";
+import { Location } from "expo";
 import { sendSMSAsync, isAvailableAsync } from "expo-sms";
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 import _ from "lodash";
@@ -15,7 +16,17 @@ import AddableChip from "./components/AddableChip.js";
 import ContactsModal from "./components/ContactsModal/ContactsModal";
 import PlusButton from "./components/PlusButton.js";
 
-import { commitState, retrieveState } from "./utils/storage";
+import {
+	commitState,
+	retrieveState,
+	clearTrackedRegion
+} from "./utils/storage";
+import { registerGeofencingTask } from "./services/backgroundService";
+import { startGeofencing, getLocation } from "./services/locationService";
+import { requestNotificationPermission } from "./services/notificationService";
+import { LOCATION_TASK } from "./constants";
+
+registerGeofencingTask();
 
 export default class App extends React.Component {
 	constructor(props) {
@@ -26,20 +37,37 @@ export default class App extends React.Component {
 			destinations: [],
 			recipients: [],
 			contactsModalVisible: false,
-			loading: false
+			loading: false,
+			sendLoading: false,
+			comingBack: false
 		};
 
 		this.toggleChip = this.toggleChip.bind(this);
 		this.contactAdd = this.contactAdd.bind(this);
 		this.sendButtonClick = this.sendButtonClick.bind(this);
+		this.checkinButtonClick = this.checkinButtonClick.bind(this);
 	}
 
 	async componentDidMount() {
 		this.setState({ loading: true });
 
-		const { members, destinations, recipients } = await retrieveState();
+		const {
+			members,
+			destinations,
+			recipients,
+			comingBack
+		} = await retrieveState();
 
-		this.setState({ loading: false, members, destinations, recipients });
+		this.setState({
+			loading: false,
+			members,
+			destinations,
+			recipients,
+			comingBack
+		});
+
+		clearTrackedRegion();
+		requestNotificationPermission();
 	}
 
 	async toggleChip(category, index) {
@@ -77,6 +105,8 @@ export default class App extends React.Component {
 	}
 
 	async sendButtonClick() {
+		this.setState({ sendLoading: true });
+
 		const members = this.state.members
 			.filter(member => member.selected)
 			.map(member => member.value);
@@ -95,15 +125,36 @@ export default class App extends React.Component {
 			members.length > 1 ? "are" : "is"
 		} going to ${destination}`;
 
-		const isAvailable = await isAvailableAsync();
-		if (isAvailable) {
-			await sendSMSAsync(recipients, message);
-		} else {
-			alert("SMS is not available on this platform!");
-		}
+		// const isAvailable = await isAvailableAsync();
+		// if (isAvailable) {
+		// 	await sendSMSAsync(recipients, message);
+		// } else {
+		// 	alert("SMS is not available on this platform!");
+		// }
+
+		const { latitude, longitude } = await getLocation();
+		await startGeofencing(latitude, longitude);
+
+		// Trigger the button to stop loading, and enable the "In View"
+		this.setState({ sendLoading: false, comingBack: true });
+		await commitState({ ...this.state, comingBack: true });
 	}
 
-	render() {
+	async checkinButtonClick() {
+		const members =
+			this.state.members &&
+			this.state.members
+				.filter(member => member.selected)
+				.map(member => member.value)
+				.join(", ");
+
+		const message = `${members} are back.`;
+
+		this.setState({ comingBack: false });
+		await commitState({ ...this.state, comingBack: false });
+	}
+
+	renderOut() {
 		return (
 			<ActionSheetProvider>
 				<SafeAreaView style={styles.container}>
@@ -164,14 +215,40 @@ export default class App extends React.Component {
 							onPress={() => this.setState({ contactsModalVisible: true })}
 						/>
 					</View>
-					<TouchableOpacity onPress={this.sendButtonClick}>
+					<TouchableOpacity
+						onPress={this.sendButtonClick}
+						disabled={this.state.sendLoading}
+					>
 						<View style={styles.sendButton}>
-							<Text style={styles.sendButton_text}>Send.</Text>
+							<Text style={styles.sendButton_text}>
+								{this.state.sendLoading ? "Loading..." : "Send"}
+							</Text>
 						</View>
 					</TouchableOpacity>
 				</SafeAreaView>
 			</ActionSheetProvider>
 		);
+	}
+
+	renderIn() {
+		return (
+			<SafeAreaView style={styles.container}>
+				<Text style={styles.header}>➡️ In</Text>
+				<Text style={styles.checkinMessage}>
+					We'll send a check-in message to{" "}
+					{this.state.recipients.map(recipient => recipient.value.name)}.
+				</Text>
+				<TouchableOpacity onPress={this.checkinButtonClick}>
+					<View style={styles.sendButton}>
+						<Text style={styles.sendButton_text}>Check In</Text>
+					</View>
+				</TouchableOpacity>
+			</SafeAreaView>
+		);
+	}
+
+	render() {
+		return this.state.comingBack ? this.renderIn() : this.renderOut();
 	}
 }
 
@@ -207,5 +284,8 @@ const styles = StyleSheet.create({
 		width: "100%",
 		flexWrap: "wrap",
 		marginBottom: 15
+	},
+	checkinMessage: {
+		fontSize: 20
 	}
 });
