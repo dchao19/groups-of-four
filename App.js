@@ -1,9 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView } from 'react-native';
+import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 import _ from "lodash";
 
 import DeletableChip from './components/DeleteableChip.js';
 import AddableChip from './components/AddableChip.js';
+import ContactsModal from './components/ContactsModal/ContactsModal';
+import PlusButton from './components/PlusButton.js';
 
 export default class App extends React.Component {
   constructor(props) {
@@ -44,25 +47,23 @@ export default class App extends React.Component {
       ],
       recipients: [
         {
-          value: "Ian",
+          value: { name: "Ian" },
           selected: true,
         },
         {
-          value: "Mike",
+          value: { name: "Mike" },
           selected: false,
         },
         {
-          value: "Jen",
+          value: { name: "Jen" },
           selected: false,
-        },
-        {
-          value: "Eddie",
-          selected: false,
-        },
+        }
       ],
+      contactsModalVisible: false
     }
 
     this.toggleChip = this.toggleChip.bind(this);
+    this.contactAdd = this.contactAdd.bind(this);
   }
 
   toggleChip(category, index) {
@@ -82,6 +83,8 @@ export default class App extends React.Component {
   }
 
   addChip(category, value) {
+    console.log(JSON.stringify(value))
+
     const newItems = _.cloneDeep(this.state[category]);
 
     newItems.push({ value, selected: false });
@@ -89,60 +92,71 @@ export default class App extends React.Component {
     this.setState({ [category]: newItems })
   }
 
+  contactAdd(contact) {
+    this.addChip("recipients", contact);
+    this.setState({ contactsModalVisible: false });
+  }
+
   render() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.header}>⬅️ Out</Text>
-        <Text style={styles.step}>Members</Text>
-        <View style={styles.chipsContainer}>
-          {this.state.members.map((member, i) => {
-            return (
-              <DeletableChip
-                key={`member-${member.value}`}
-                onPress={() => this.toggleChip("members", i)}
-                onDeleteConfirm={() => this.deleteChip("members", i)}
-                text={member.value}
-                selected={member.selected} />
-            )
-          })}
-          <AddableChip onAddPress={(newValue) => this.addChip("members", newValue)} />
-        </View>
-        <Text style={styles.step}>Destination</Text>
-        <View style={styles.chipsContainer}>
-          {this.state.destinations.map((destination, i) => {
-            return (
-              <DeletableChip
-                key={`destination-${destination.value}`}
-                onPress={() => this.toggleChip("destinations", i)}
-                onDeleteConfirm={() => this.deleteChip("destinations", i)}
-                text={destination.value}
-                selected={destination.selected} />
-            )
-          })}
-          <AddableChip onAddPress={(newValue) => this.addChip("destinations", newValue)} />
-
-        </View>
-        <Text style={styles.step}>Recipient</Text>
-        <View style={styles.chipsContainer}>
-          {this.state.recipients.map((recipient, i) => {
-            return (
-              <DeletableChip
-                key={`recipient-${recipient.value}`}
-                onPress={() => this.toggleChip("recipients", i)}
-                onDeleteConfirm={() => this.deleteChip("recipients", i)}
-                text={recipient.value}
-                selected={recipient.selected} />
-            )
-          })}
-          <AddableChip onAddPress={(newValue) => this.addChip("recipients", newValue)} />
-
-        </View>
-        <TouchableOpacity>
-          <View style={styles.sendButton}>
-            <Text style={styles.sendButton_text}>Send.</Text>
+      <ActionSheetProvider>
+        <SafeAreaView style={styles.container}>
+          <ContactsModal
+            onClose={() => this.setState({ contactsModalVisible: false })}
+            visible={this.state.contactsModalVisible}
+            onSelectContact={this.contactAdd}
+          />
+          <Text style={styles.header}>⬅️ Out</Text>
+          <Text style={styles.step}>Members</Text>
+          <View style={styles.chipsContainer}>
+            {this.state.members.map((member, i) => {
+              return (
+                <DeletableChip
+                  key={`member-${member.value}`}
+                  onPress={() => this.toggleChip("members", i)}
+                  onDeleteConfirm={() => this.deleteChip("members", i)}
+                  text={member.value}
+                  selected={member.selected} />
+              )
+            })}
+            <AddableChip onAddPress={(newValue) => this.addChip("members", newValue)} />
           </View>
-        </TouchableOpacity>
-      </View>
+          <Text style={styles.step}>Destination</Text>
+          <View style={styles.chipsContainer}>
+            {this.state.destinations.map((destination, i) => {
+              return (
+                <DeletableChip
+                  key={`destination-${destination.value}`}
+                  onPress={() => this.toggleChip("destinations", i)}
+                  onDeleteConfirm={() => this.deleteChip("destinations", i)}
+                  text={destination.value}
+                  selected={destination.selected} />
+              )
+            })}
+            <AddableChip onAddPress={(newValue) => this.addChip("destinations", newValue)} />
+
+          </View>
+          <Text style={styles.step}>Recipient</Text>
+          <View style={styles.chipsContainer}>
+            {this.state.recipients.map((recipient, i) => {
+              return (
+                <DeletableChip
+                  key={`recipient-${recipient.value.name}`}
+                  onPress={() => this.toggleChip("recipients", i)}
+                  onDeleteConfirm={() => this.deleteChip("recipients", i)}
+                  text={recipient.value.name}
+                  selected={recipient.selected} />
+              )
+            })}
+            <PlusButton onPress={() => this.setState({ contactsModalVisible: true })} />
+          </View>
+          <TouchableOpacity>
+            <View style={styles.sendButton}>
+              <Text style={styles.sendButton_text}>Send.</Text>
+            </View>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </ActionSheetProvider>
     );
   }
 }
