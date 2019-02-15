@@ -5,6 +5,13 @@ import { connectActionSheet } from "@expo/react-native-action-sheet";
 @connectActionSheet
 export default class ContactItem extends React.Component {
 	openActionSheet = () => {
+		if (this.props.phoneNumbers.length === 1) {
+			return (
+				this.props.onSelectNumber &&
+				this.props.onSelectNumber(this.props.phoneNumbers[0])
+			);
+		}
+
 		const options = this.props.phoneNumbers.map(
 			phoneNumber => `${phoneNumber.label} - ${phoneNumber.number}`
 		);
@@ -15,7 +22,8 @@ export default class ContactItem extends React.Component {
 		this.props.showActionSheetWithOptions(
 			{
 				options,
-				cancelButtonIndex
+				cancelButtonIndex,
+				title: "Select a phone number"
 			},
 			buttonIndex => {
 				if (buttonIndex !== cancelButtonIndex) {
