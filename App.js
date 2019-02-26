@@ -125,12 +125,12 @@ export default class App extends React.Component {
 			members.length > 1 ? "are" : "is"
 		} going to ${destination}`;
 
-		// const isAvailable = await isAvailableAsync();
-		// if (isAvailable) {
-		// 	await sendSMSAsync(recipients, message);
-		// } else {
-		// 	alert("SMS is not available on this platform!");
-		// }
+		const isAvailable = await isAvailableAsync();
+		if (isAvailable) {
+			await sendSMSAsync(recipients, message);
+		} else {
+			alert("SMS is not available on this platform!");
+		}
 
 		const { latitude, longitude } = await getLocation();
 		await startGeofencing(latitude, longitude);
@@ -148,7 +148,13 @@ export default class App extends React.Component {
 				.map(member => member.value)
 				.join(", ");
 
-		const message = `${members} are back.`;
+		const recipients = this.state.recipients
+			.filter(recipient => recipient.selected)
+			.map(recipient => recipient.value.number);
+
+		const message = `${members} ${members.length > 1 ? "are" : "is"} back.`;
+
+		await sendSMSAsync(recipients, message);
 
 		this.setState({ comingBack: false });
 		await commitState({ ...this.state, comingBack: false });
